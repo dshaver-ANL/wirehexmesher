@@ -1,0 +1,74 @@
+c
+c GLOBAL sizing parameters:
+c
+      parameter (ldim = 3)                            ! max number of dimensions (2D/3D)
+      parameter (nfldmax = 3)                         ! max number of fields
+      parameter (max_num_elem     = 5 200 000)        ! max number of elements
+      parameter (max_num_sidesets =         1)        ! max number of sidesets
+
+      parameter (max_num_elem_blk =   1)        ! max number of elemets per block
+                                                      ! (minor memory impact)
+c=======================================================================================
+c
+c
+c NEK CORE variables:
+c
+      real xm1(3,3,3,max_num_elem)
+      real ym1(3,3,3,max_num_elem) 
+      real zm1(3,3,3,max_num_elem)
+      real bc(5,2*ldim,max_num_elem,nfldmax), curve(6,12,max_num_elem) 
+
+      character*1  ccurve((4+8*(ldim-2)),max_num_elem)
+      character*3  cbc(2*ldim,max_num_elem,nfldmax)
+c
+c
+c .REA file related variables
+c
+      character*32   reaname_in, reaname_out
+      character*80   logic(50),  reabot(100) 
+      character*80   cparam(200)
+
+      real           xfac,       yfac,    xzero,   yzero
+      real           param(200), vnekton
+
+      integer        ndimrea, npsdata, nlogic
+      integer        nparam,  npscal    
+
+      logical        ifflow, ifheat,  iftran,  ifadv(nfldmax), ifkeps 
+      logical        ifstrs, ifsplit, ifmgrid, ifmodel,        ifchar
+      logical        ifaxis, ifmvbd,  iflomach,iftmsh(0:nfldmax)
+      logical        ifstrso, ifsplito, ifmgrido,  ifmodelo, ifkepso 
+      logical        ifaxiso, ifmvbdo,  iflomacho, ifcharo
+c
+c
+c
+c     Input common block structure:
+c
+c     INPUT1:  REAL       
+c     INPUT2:  INTEGER    
+c     INPUT3:  LOGICAL   
+c     INPUT4:  CHARACTER
+c
+      common /INPUT1/ x_exo, y_exo, z_exo, xm1,   ym1,    zm1,
+     &                bc,    xfac,  yfac,  xzero, yzero,  curve, 
+     &                param, vnekton
+c
+c
+      common /INPUT2/ num_dim,           num_elem,         num_elem_blk,
+     &                num_side_sets,     num_sides_in_set, idss,
+     &                elem_list,         side_list,        connect,
+     &                num_elem_in_block, nflds,            fldinp,
+     &                ssinp,             nentries,         ndimrea,
+     &                nparam,            npsdata,          nlogic, 
+     &                npscal,            num_elf 
+c
+      common /INPUT3/ ifbcs,    ifbcfld, 
+     &                iftmsh,   ifaxis,  ifstrs,  ifsplit,  ifmgrid, 
+     &                ifmodel,  ifkeps,  ifmvbd,  ifchar,   iflomach,
+     &                iftmsho,  ifaxiso, ifstrso, ifsplito, ifmgrido, 
+     &                ifmodelo, ifkepso, ifmvbdo, ifcharo,  iflomacho,
+     &                ifflow,   ifheat,  iftran,  ifadv
+c
+      common /INPUT4/ cbc,         ccurve,  exoname, bcinp, 
+     &                reaname_out, logic,   reaname_in,
+     &                cparam
