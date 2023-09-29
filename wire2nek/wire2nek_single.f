@@ -54,7 +54,7 @@ c----------------------------------------------------------------------
       close(194)
 
 c     Inlet/outlet? >0 inout, <0 periodic
-      i_inout=1.0 !r_in 
+      i_inout=-1.0 !r_in 
 c     Parameters num_elem MUST be smaller than the parameter you are compiled with
       layer=rlayer
       blk_lay=rblk_lay

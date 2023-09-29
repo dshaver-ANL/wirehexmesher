@@ -2,8 +2,9 @@ c-----------------------------------------------------------------------
 
       subroutine rzero(a,n)
       DIMENSION  A(1)
-      DO 100 I = 1, N
- 100     A(I ) = 0.0
+      do I = 1, N
+        A(I ) = 0.0
+      enddo
       return
       END
 
@@ -12,8 +13,9 @@ c-----------------------------------------------------------------------
       subroutine izero(a,n)
       INTEGER A(1)
 C
-      DO 100 I = 1, N
- 100     A(I ) = 0
+      do I = 1, N
+         A(I ) = 0
+      enddo
       return
       END
 
@@ -35,8 +37,9 @@ c-----------------------------------------------------------------------
 
       subroutine rone(a,n)
       DIMENSION  A(1)
-      DO 100 I = 1, N
- 100     A(I ) = 1.0
+      do I = 1, N
+         A(I ) = 1.0
+      enddo
       return
       END
 c-----------------------------------------------------------------------
@@ -47,7 +50,6 @@ c-----------------------------------------------------------------------
       do i=1,n
          a(i)=b(i)
       enddo
-
       return
       end
 
@@ -56,16 +58,18 @@ c-----------------------------------------------------------------------
       subroutine chcopy(a,b,n)
       CHARACTER*1 A(1), B(1)
 C
-      DO 100 I = 1, N
- 100     A(I) = B(I)
+      do I = 1, N
+         A(I) = B(I)
+      enddo
       return
       END
 C
       subroutine icopy(a,b,n)
       INTEGER A(1), B(1)
 C
-      DO 100 I = 1, N
- 100     A(I) = B(I)
+      do I = 1, N
+         A(I) = B(I)
+      enddo
       return
       END
 

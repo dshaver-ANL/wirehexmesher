@@ -14,7 +14,7 @@ c Load elements and bc's for pin
 c      call load_convert_pin
 c Generate a rea file with new geometry elements, curved sides and bc's
       call test_range
-      nreps=6
+      nreps=5
       partial = 0.5
       call replicate(nreps,partial)
       call gen_rea
@@ -36,15 +36,15 @@ c-----------------------------------------------------------
 
       open(194,file='data_v5f.out',form='formatted',status='old')
       write(6,*) "*** Loading input data from mesher ***" 
-      read(194,12) rlayer, rblk_lay, relm_blk, rnel_ftf, r_in
+      read(194,*) rlayer, rblk_lay, relm_blk, rnel_ftf, r_in
       close(194)
+c   12 format(5F)
 
 c     Parameters num_elem MUST be smaller than the parameter you are compiled with
 
 
-c      L_period=24.5d0
-      L_period = 182.0d0/7.43d0
-      write(*,*) L_period
+      L_period=40.0
+      write(*,*) "length of 1 span = ",L_period
       num_elem1=num_elem   
 
       write(*,*) 'here 1',partial,num_elf,num_elem1
@@ -52,8 +52,8 @@ c      L_period=24.5d0
       num_elem2=num_elem*nreps+partial_elem
    
       if (num_elem2.gt.max_num_elem) then
-         write(6,*)" TOO MANY REPS ... check SIZE"
-         stop
+        write(6,*)" TOO MANY REPS ... check SIZE"
+        stop
       endif 
       num_elem=num_elem2
       num_elf = num_elem2
@@ -71,36 +71,36 @@ c      L_period=24.5d0
 
 
       do k=1,(nreps-1)
-      write(*,*) 'rep', k
-      do i=1,num_elem1
-      do j=1,27
-      xm1(j,1,1,i+k*num_elem1)=xm1(j,1,1,i)
-      ym1(j,1,1,i+k*num_elem1)=ym1(j,1,1,i)
-      zm1(j,1,1,i+k*num_elem1)=zm1(j,1,1,i)+dble(k)*L_period
-      enddo
-      do j=1,4
-      cbc(j,i+k*num_elem1,1)=cbc(j,i,1)
-      cbc(j,i+k*num_elem1,2)=cbc(j,i,2)
-      enddo
-      enddo
+        write(*,*) 'rep', k
+        do i=1,num_elem1
+          do j=1,27
+            xm1(j,1,1,i+k*num_elem1)=xm1(j,1,1,i)
+            ym1(j,1,1,i+k*num_elem1)=ym1(j,1,1,i)
+            zm1(j,1,1,i+k*num_elem1)=zm1(j,1,1,i)+dble(k)*L_period
+          enddo
+          do j=1,4
+            cbc(j,i+k*num_elem1,1)=cbc(j,i,1)
+            cbc(j,i+k*num_elem1,2)=cbc(j,i,2)
+          enddo
+        enddo
       enddo
 
 
 c     THis section duplicates a fraction of a full pitch in addition
       if (partial.gt.0.0) then
-              write(*,*) 'DOING PARTIAL'
-       k=nreps
-       do i=1,num_elem1*partial
-       do j=1,27
-       xm1(j,1,1,i+k*num_elem1)=xm1(j,1,1,i)
-       ym1(j,1,1,i+k*num_elem1)=ym1(j,1,1,i)
-       zm1(j,1,1,i+k*num_elem1)=zm1(j,1,1,i)+dble(k)*L_period
-       enddo
-       do j=1,4
-       cbc(j,i+k*num_elem1,1)=cbc(j,i,1)
-       cbc(j,i+k*num_elem1,2)=cbc(j,i,2)
-       enddo
-       enddo
+        write(*,*) 'DOING PARTIAL'
+        k=nreps
+        do i=1,nint(num_elem1*partial)
+          do j=1,27
+            xm1(j,1,1,i+k*num_elem1)=xm1(j,1,1,i)
+            ym1(j,1,1,i+k*num_elem1)=ym1(j,1,1,i)
+            zm1(j,1,1,i+k*num_elem1)=zm1(j,1,1,i)+dble(k)*L_period
+          enddo
+          do j=1,4
+            cbc(j,i+k*num_elem1,1)=cbc(j,i,1)
+            cbc(j,i+k*num_elem1,2)=cbc(j,i,2)
+          enddo
+        enddo
       endif
 
 
@@ -119,10 +119,10 @@ c      enddo
 c      enddo     
 
       do i=1,num_elem
-      cbc(5,i,1)='E  '
-      cbc(5,i,2)='E  '
-      cbc(6,i,1)='E  '
-      cbc(6,i,2)='E  '
+        cbc(5,i,1)='E  '
+        cbc(5,i,2)='E  '
+        cbc(6,i,1)='E  '
+        cbc(6,i,2)='E  '
       enddo
 
       last_rep   = num_elem1*(nreps-1+partial)
@@ -131,12 +131,11 @@ c      enddo
       write(*,*) "here", last_rep, last_layer, nel_layer, num_elem1
 
       do i=1,nel_layer
-      cbc(5,i,1)='v  '
-      cbc(5,i,2)='t  '
-      cbc(6,i+last_rep+last_layer,1)='O  '
-      cbc(6,i+last_rep+last_layer,2)='I  '
+        cbc(5,i,1)='v  '
+        cbc(5,i,2)='t  '
+        cbc(6,i+last_rep+last_layer,1)='O  '
+        cbc(6,i+last_rep+last_layer,2)='I  '
       enddo
-   12 format(5F)
  
       write(*,*) "num_elem", num_elem, "num_elem1", num_elem1,
      &    "num_elem2", num_elem2
@@ -157,12 +156,12 @@ c-----------------------------------------------------------------------
 
       do i=1,num_elem 
       do j=1,27
-      if (x1_max.lt.xm1(j,1,1,i)) x1_max=xm1(j,1,1,i)
-      if (x1_min.gt.xm1(j,1,1,i)) x1_min=xm1(j,1,1,i)
-      if (y1_max.lt.ym1(j,1,1,i)) y1_max=ym1(j,1,1,i)
-      if (y1_min.gt.ym1(j,1,1,i)) y1_min=ym1(j,1,1,i)
-      if (z1_max.lt.zm1(j,1,1,i)) z1_max=zm1(j,1,1,i)
-      if (z1_min.gt.zm1(j,1,1,i)) z1_min=zm1(j,1,1,i)
+        if (x1_max.lt.xm1(j,1,1,i)) x1_max=xm1(j,1,1,i)
+        if (x1_min.gt.xm1(j,1,1,i)) x1_min=xm1(j,1,1,i)
+        if (y1_max.lt.ym1(j,1,1,i)) y1_max=ym1(j,1,1,i)
+        if (y1_min.gt.ym1(j,1,1,i)) y1_min=ym1(j,1,1,i)
+        if (z1_max.lt.zm1(j,1,1,i)) z1_max=zm1(j,1,1,i)
+        if (z1_min.gt.zm1(j,1,1,i)) z1_min=zm1(j,1,1,i)
       enddo
       enddo
   
@@ -172,6 +171,7 @@ c-----------------------------------------------------------------------
       write(6,*) "Z range: ", z1_min," - ",z1_max
       write(6,*) "============================================="
 
+      return
       end
  
 c-----------------------------------------------------------------------
@@ -202,11 +202,11 @@ c----------------------------------------------------------------------
 
       open(194,file='data_v5f.out',form='formatted',status='old')
       write(6,*) "*** Loading input data from mesher ***" 
-      read(194,12) rlayer, rblk_lay, relm_blk, rnel_ftf, r_in
+      read(194,*) rlayer, rblk_lay, relm_blk, rnel_ftf, r_in
       close(194)
 
 c     Inlet/outlet? Put to 1 to change 
-      i_inout=1.0 !r_in 
+      i_inout=-1.0 !r_in 
 c     Parameters num_elem MUST be smaller than the parameter you are compiled with
       layer=rlayer
       blk_lay=rblk_lay
@@ -252,220 +252,123 @@ c      nel_pin   = 61*6*elm_blk
       iee = 1
       do ie=1,num_elem
         if (mod(ie,10000).eq.0)
-     &  write(6,*) " ** Loaded ",ie," elements ..."
+     &                       write(6,*) " ** Loaded ",ie," elements ..."
 
-c      if (block(ie).eq.0) then      
-c      write(*,*) "good element"
+        do kk=1,27
+          xx(kk)=0.0
+          yy(kk)=0.0
+          zz(kk)=0.0
+        enddo
 
-      do kk=1,27
-      xx(kk)=0.0
-      yy(kk)=0.0
-      zz(kk)=0.0
-      enddo
+        do kk=1,6
+          xbc(kk)=0.0
+          ybc(kk)=0.0
+        enddo
 
-      do kk=1,6
-      xbc(kk)=0.0
-      ybc(kk)=0.0
-      enddo
+        read(195,*) (xbc(kk),kk=1,6)
+        read(197,*) (xx(kk),kk=1,27)
+        read(198,*) (yy(kk),kk=1,27)
+        read(199,*) (zz(kk),kk=1,27)
 
-      read(195,11) (xbc(kk),kk=1,6)
-      read(197,10) (xx(kk),kk=1,27)
-      read(198,10) (yy(kk),kk=1,27)
-      read(199,10) (zz(kk),kk=1,27)
+        P = 1.189 
+        pi = 4.*atan(1.)
+        d1 = 4*P
+        d2 = d1*sin(pi/3)
+        d3 = 1.6*P 
+        d4 = d1-P
+        d5 = d4*sin(pi/3)
 
-   10 format(27F)
-   11 format(6F)
-   12 format(5F)
+        block_s = 74 
+        block_f = 77 
 
-c BLOCK ELEMENTS HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        skip=0
 
-c      if(ie.ge.(block_L-1)*nel_layer.and.ie.lt.block_l*nel_layer
-c     $  .and.xx(14).gt.-0.6.and.xx(14).lt.0.6
-c     $  .and.yy(14).gt.-0.6.and.yy(14).lt.0.6) then
-c           write(*,*) "element removed"
-c           el_rm = el_rm+1
-c      else
-
-      P = 1.189 
-      pi = 3.14159
-      d1 = 4*P
-      d2 = d1*sin(pi/3)
-      d3 = 1.6*P 
-      d4 = d1-P
-      d5 = d4*sin(pi/3)
-
-      block_s = 74 
-      block_f = 77 
-
-
-      skip=0
-
-
-cc BLOCK 3
-c      if(ie.ge.(block_s-1)*nel_layer.and.ie.lt.block_f*nel_layer
-c     $  .and. yy(14).le.xx(14)*tan(pi/3)
-c     $  .and. yy(14).le.-1*xx(14)*tan(pi/3)
-c     $  .and. yy(14).le. -d2) then
-c        skip=1
-c      endif 
-c
-c      if(ie.ge.nel_layer*layer+(block_s-1)*nel_ftf
-c     $  .and. ie.lt.nel_layer*layer+block_f*nel_ftf
-c     $  .and. yy(14).le.xx(14)*tan(pi/3)
-c     $  .and. yy(14).le.-1*xx(14)*tan(pi/3)
-c     $  .and. yy(14).le. -d2) then
-c        skip=1
-c      endif 
-c
-c
-cc BLOCK 1
-c      if(ie.ge.(block_s-1)*nel_layer.and.ie.lt.block_f*nel_layer
-c     $  .and. yy(14).ge.-1*xx(14)*tan(pi/3)
-c     $  .and. yy(14).le.0
-c     $  .and. yy(14).le.xx(14)*tan(pi/3)-d1*tan(pi/3)) then
-c        skip=1
-c      endif
-c
-c      if(ie.ge.nel_layer*layer+(block_s-1)*nel_ftf
-c     $  .and. ie.lt.nel_layer*layer+block_f*nel_ftf
-c     $  .and. yy(14).ge.-1*xx(14)*tan(pi/3)
-c     $  .and. yy(14).le.0
-c     $  .and. yy(14).le.xx(14)*tan(pi/3)-d1*tan(pi/3)) then
-c        skip=1
-c      endif
-c
-c
-cc BLOCK 2  // Checked
-c      if(ie.ge.(block_s-1)*nel_layer.and.ie.lt.block_f*nel_layer
-c     $  .and. yy(14).ge.0
-c     $  .and. yy(14).le.xx(14)*tan(pi/3)
-c     $  .and. yy(14).ge.-1*xx(14)*tan(pi/3)+d1*tan(pi/3)) then
-c        skip=1
-c      endif
-c
-c      if(ie.ge.nel_layer*layer+(block_s-1)*nel_ftf
-c     $  .and. ie.lt.nel_layer*layer+block_f*nel_ftf
-c     $  .and. yy(14).ge.0
-c     $  .and. yy(14).le.xx(14)*tan(pi/3)
-c     $  .and. yy(14).ge.-1*xx(14)*tan(pi/3)+d1*tan(pi/3)) then
-c        skip=1
-c      endif
-
-
-c BLOCK 4
-c      if(ie.ge.(block_s-1)*nel_layer.and.ie.lt.block_f*nel_layer
-c     $  .and. yy(14).le.d3*sin(pi/3)
-c     $  .and. yy(14).ge.-1*d3*sin(pi/3)
-c     $  .and. yy(14).ge.xx(14)*tan(pi/3)-d3*tan(pi/3)
-c     $  .and. yy(14).le.-1*xx(14)*tan(pi/3)+d3*tan(pi/3)
-c     $  .and. yy(14).ge.-1*xx(14)*tan(pi/3)-d3*tan(pi/3) 
-c     $  .and. yy(14).le.xx(14)*tan(pi/3)+d3*tan(pi/3)) then
-c        skip=1
-c      endif
-
-
-
-c BLOCK 5
-c      if(ie.ge.(block_s-1)*nel_layer.and.ie.lt.block_f*nel_layer
-c     $  .and. yy(14).ge.-d2
-c     $  .and. yy(14).le.-1*xx(14)*tan(pi/3)+d2*tan(pi/3)
-c     $  .and. yy(14).ge.xx(14)*tan(pi/3)-d1*tan(pi/3)
-c     $  .and. yy(14).le.xx(14)*tan(pi/3)-d4*tan(pi/3))then
-c       skip=1
-c      endif
-
-      if (skip==0) then
+        if (skip.eq.0) then
  
-      do kk=1,27
-      xm1(kk,1,1,iee)=xx(kk)
-      ym1(kk,1,1,iee)=yy(kk)
-      zm1(kk,1,1,iee)=zz(kk)
-      enddo
-
+          do kk=1,27
+            xm1(kk,1,1,iee)=xx(kk)
+            ym1(kk,1,1,iee)=yy(kk)
+            zm1(kk,1,1,iee)=zz(kk)
+          enddo
      
-      do kk=1,6
-      cbc(kk,iee,1)='E  '
-      cbc(kk,iee,2)='E  '
-      enddo
+          do kk=1,6
+            cbc(kk,iee,1)='E  '
+            cbc(kk,iee,2)='E  '
+          enddo
 
-c      do j=1,5
-c      bc(j,kk,ie,1)=0.0
-c      bc(j,kk,ie,2)=0.0
-c      enddo
+c         do j=1,5
+c           bc(j,kk,ie,1)=0.0
+c           bc(j,kk,ie,2)=0.0
+c         enddo
 
-      if (xbc(4).gt.0.0) then
-       cbc(4,iee,1)='W  '
-       cbc(4,iee,2)='I  '
-c      cbc(4,ie,2)='f  '
-       bc(5,4,iee,1) = 1
-      endif
-      if (xbc(2).gt.0.0) then
-       cbc(2,iee,1)='W  '
-       cbc(2,iee,2)='I  '  !outer wall
-       bc(5,2,iee,1) = 1
-c      cbc(2,ie,2)='f  '
-      endif
+          if (xbc(4).gt.0.0) then
+            cbc(4,iee,1)='W  '
+            cbc(4,iee,2)='I  '
+c           cbc(4,ie,2)='f  '
+            bc(5,4,iee,1) = 1
+          endif
+          if (xbc(2).gt.0.0) then
+            cbc(2,iee,1)='W  '
+            cbc(2,iee,2)='I  '  !outer wall
+            bc(5,2,iee,1) = 1
+c           cbc(2,ie,2)='f  '
+          endif
 
-      period=elm_blk*blk_lay
+          period=elm_blk*blk_lay
 
-      if ((layer.gt.1).and.(i_inout.lt.0)) then  
-         if (xbc(5).gt.0.0) then
-            if (ie.le.nel_layer) then
-               period=nel_layer*(layer-1)
-             else
-               period=nel_ftf*(layer-1)
-            endif 
-         cbc(5,iee,1)='P  '
-         cbc(5,iee,2)='P  '
-         bc(1,5,iee,1)=ie+period-el_rm
-         bc(2,5,iee,1)=6.0
-         bc(1,5,iee,2)=ie+period-el_rm
-         bc(2,5,iee,2)=6.0
-c         bc(5,5,iee,1) = 2
-         endif
-         if (xbc(6).gt.0.0) then
-            if (ie.le.(nel_layer*layer)) then
-               period=nel_layer*(layer-1)
-            else
-               period=nel_ftf*(layer-1)
+          if ((layer.gt.1).and.(i_inout.lt.0)) then  
+            if (xbc(5).gt.0.0) then
+              if (ie.le.nel_layer) then
+                period=nel_layer*(layer-1)
+              else
+                period=nel_ftf*(layer-1)
+              endif 
+              cbc(5,iee,1)='P  '
+              cbc(5,iee,2)='P  '
+              bc(1,5,iee,1)=ie+period-el_rm
+              bc(2,5,iee,1)=6.0
+              bc(1,5,iee,2)=ie+period-el_rm
+              bc(2,5,iee,2)=6.0
+c             bc(5,5,iee,1) = 2
             endif
-            cbc(6,iee,1)='P  '
-            cbc(6,iee,2)='P  '
-            bc(1,6,iee,1)=ie-period+el_rm
-            bc(2,6,iee,1)=5.0
-            bc(1,6,iee,2)=ie-period+el_rm
-            bc(2,6,iee,2)=5.0
-c            bc(5,6,iee,1) = 3
-         endif
-      else
-        if (xbc(5).gt.0.0) then
-          cbc(5,iee,1)='v  '
-          cbc(5,iee,2)='t  '
-          bc(5,5,iee,1) = 2
-        endif
-        if (xbc(6).gt.0.0) then 
-          cbc(6,iee,1)='O  '
-          cbc(6,iee,2)='I  '
-          bc(5,6,iee,1) = 3
-        endif 
-      endif  
+            if (xbc(6).gt.0.0) then
+              if (ie.le.(nel_layer*layer)) then
+                period=nel_layer*(layer-1)
+              else
+                period=nel_ftf*(layer-1)
+              endif
+              cbc(6,iee,1)='P  '
+              cbc(6,iee,2)='P  '
+              bc(1,6,iee,1)=ie-period+el_rm
+              bc(2,6,iee,1)=5.0
+              bc(1,6,iee,2)=ie-period+el_rm
+              bc(2,6,iee,2)=5.0
+c             bc(5,6,iee,1) = 3
+            endif
+          else
+            if (xbc(5).gt.0.0) then
+              cbc(5,iee,1)='v  '
+              cbc(5,iee,2)='t  '
+              bc(5,5,iee,1) = 2
+            endif
+            if (xbc(6).gt.0.0) then 
+              cbc(6,iee,1)='O  '
+              cbc(6,iee,2)='I  '
+              bc(5,6,iee,1) = 3
+            endif 
+          endif  
+        iee = iee+1
+        else
+          write(*,*) "element removed"
+          el_rm = el_rm+1
+c         read(195,11) (xbc(kk),kk=1,6)
+c         read(197,10) (xx(kk),kk=1,27)
+c         read(198,10) (yy(kk),kk=1,27)
+c         read(199,10) (zz(kk),kk=1,27)
 
-      iee = iee+1
-      else
-        write(*,*) "element removed"
-        el_rm = el_rm+1
-c      read(195,11) (xbc(kk),kk=1,6)
-c      read(197,10) (xx(kk),kk=1,27)
-c      read(198,10) (yy(kk),kk=1,27)
-c      read(199,10) (zz(kk),kk=1,27)
-
-      endif ! remove elements
-
+        endif ! remove elements
 
       enddo !Main loop
-
-
-
 
       num_elem = num_elem - el_rm
       num_elf=num_elem
@@ -503,7 +406,7 @@ c----------------------------------------------------------------------
       num_elf=ne_f
       open(194,file='pdata_v5f.out',form='formatted',status='old')
       write(6,*) "*** Loading solid input data from mesher ***"
-      read(194,11) rlayer, rmlay
+      read(194,*) rlayer, rmlay
       close(194)
 
       num_elem  = rmlay !rlayer
@@ -529,12 +432,12 @@ c----------------------------------------------------------------------
       zz(kk)=0.0
       enddo
 
-      read(197,10) (xx(kk),kk=1,27)
-      read(198,10) (yy(kk),kk=1,27)
-      read(199,10) (zz(kk),kk=1,27)
+      read(197,*) (xx(kk),kk=1,27)
+      read(198,*) (yy(kk),kk=1,27)
+      read(199,*) (zz(kk),kk=1,27)
 
-   10 format(27F)
-   11 format(2F)
+c   10 format(27F)
+c   11 format(2F)
 
       do kk=1,27
       xm1(kk,1,1,ne_f+ie)=xx(kk)
