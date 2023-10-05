@@ -2,21 +2,24 @@ c-----------------------------------------------------------------------
       program wires
       include 'SIZE'
       integer nreps
-      real partial
+      real partial,spanlen
+      logical ifperiodic
+      spanlen = 40.0 !length of a single span (mm)
+      nreps   = 3    !number of full spans
+      partial = 0.5  !total length = (nreps+partial)*spanlen
+      ifperiodic = .false.
       reaname_in="base.rea"
       reaname_out="wire_out.rea"
 C Read .rea file to copy parameters
       call read_rea
 c Load elements and bc's
-      call load_convert
+      call load_convert(ifperiodic)
       write(*,*) "done convert"
 c Load elements and bc's for pin
 c      call load_convert_pin
 c Generate a rea file with new geometry elements, curved sides and bc's
+      call replicate(nreps,partial,spanlen)
       call test_range
-      nreps=5
-      partial = 0.5
-      call replicate(nreps,partial)
       call gen_rea
       
 c Output generated mesh to fld file
@@ -28,11 +31,11 @@ c     Exit
 c      stop
       end 
 c-----------------------------------------------------------
-      subroutine replicate(nreps,partial)
+      subroutine replicate(nreps,partial,spanlen)
       include 'SIZE'
-      integer nreps,partial_elem,num_elem
+      integer nreps,partial_elem,num_elem,blk_lay,elm_blk
       real partial
-      real*8 L_period 
+      real spanlen
 
       open(194,file='data_v5f.out',form='formatted',status='old')
       write(6,*) "*** Loading input data from mesher ***" 
@@ -43,8 +46,7 @@ c   12 format(5F)
 c     Parameters num_elem MUST be smaller than the parameter you are compiled with
 
 
-      L_period=40.0
-      write(*,*) "length of 1 span = ",L_period
+      write(*,*) "length of 1 span = ",spanlen
       num_elem1=num_elem   
 
       write(*,*) 'here 1',partial,num_elf,num_elem1
@@ -76,11 +78,12 @@ c     Parameters num_elem MUST be smaller than the parameter you are compiled wi
           do j=1,27
             xm1(j,1,1,i+k*num_elem1)=xm1(j,1,1,i)
             ym1(j,1,1,i+k*num_elem1)=ym1(j,1,1,i)
-            zm1(j,1,1,i+k*num_elem1)=zm1(j,1,1,i)+dble(k)*L_period
+            zm1(j,1,1,i+k*num_elem1)=zm1(j,1,1,i)+dble(k)*spanlen
           enddo
           do j=1,4
             cbc(j,i+k*num_elem1,1)=cbc(j,i,1)
             cbc(j,i+k*num_elem1,2)=cbc(j,i,2)
+            bc(5,j,i+k*num_elem1,1)=bc(5,j,i,1)
           enddo
         enddo
       enddo
@@ -94,11 +97,12 @@ c     THis section duplicates a fraction of a full pitch in addition
           do j=1,27
             xm1(j,1,1,i+k*num_elem1)=xm1(j,1,1,i)
             ym1(j,1,1,i+k*num_elem1)=ym1(j,1,1,i)
-            zm1(j,1,1,i+k*num_elem1)=zm1(j,1,1,i)+dble(k)*L_period
+            zm1(j,1,1,i+k*num_elem1)=zm1(j,1,1,i)+dble(k)*spanlen
           enddo
           do j=1,4
             cbc(j,i+k*num_elem1,1)=cbc(j,i,1)
             cbc(j,i+k*num_elem1,2)=cbc(j,i,2)
+            bc(5,j,i+k*num_elem1,1)=bc(5,j,i,1)
           enddo
         enddo
       endif
@@ -109,7 +113,7 @@ c      do i=1,num_elem1
 c      do j=1,27  
 c      xm1(j,1,1,i+k*num_elem1)=xm1(j,1,1,i)
 c      ym1(j,1,1,i+k*num_elem1)=ym1(j,1,1,i)
-c      zm1(j,1,1,i+k*num_elem1)=zm1(j,1,1,i)+dble(k)*L_period
+c      zm1(j,1,1,i+k*num_elem1)=zm1(j,1,1,i)+dble(k)*spanlen
 c      enddo
 c      do j=1,4
 c      cbc(j,i+k*num_elem1,1)=cbc(j,i,1)
@@ -133,8 +137,10 @@ c      enddo
       do i=1,nel_layer
         cbc(5,i,1)='v  '
         cbc(5,i,2)='t  '
+        bc(5,5,i,1)=3
         cbc(6,i+last_rep+last_layer,1)='O  '
         cbc(6,i+last_rep+last_layer,2)='I  '
+        bc(5,6,i+last_rep+last_layer,1)=4
       enddo
  
       write(*,*) "num_elem", num_elem, "num_elem1", num_elem1,
@@ -176,7 +182,7 @@ c-----------------------------------------------------------------------
  
 c-----------------------------------------------------------------------
 c
-      subroutine load_convert
+      subroutine load_convert(ifperiodic)
 c
 c     This routine loads the wire mesh and assigns the coordinates to
 c     a lx1^3 mesh (hex27). 
@@ -199,6 +205,7 @@ c----------------------------------------------------------------------
       integer block(1000000)
       integer block_L, el_rm, iee,skip
       real*8 pi,d1,d2,d3,d4,d5
+      logical ifperiodic
 
       open(194,file='data_v5f.out',form='formatted',status='old')
       write(6,*) "*** Loading input data from mesher ***" 
@@ -206,7 +213,8 @@ c----------------------------------------------------------------------
       close(194)
 
 c     Inlet/outlet? Put to 1 to change 
-      i_inout=-1.0 !r_in 
+      i_inout=1.0 !r_in
+      if(ifperiodic) i_inout=-1.0 
 c     Parameters num_elem MUST be smaller than the parameter you are compiled with
       layer=rlayer
       blk_lay=rblk_lay
@@ -310,13 +318,13 @@ c           cbc(4,ie,2)='f  '
           if (xbc(2).gt.0.0) then
             cbc(2,iee,1)='W  '
             cbc(2,iee,2)='I  '  !outer wall
-            bc(5,2,iee,1) = 1
+            bc(5,2,iee,1) = 2
 c           cbc(2,ie,2)='f  '
           endif
 
           period=elm_blk*blk_lay
 
-          if ((layer.gt.1).and.(i_inout.lt.0)) then  
+          if ((layer.gt.1).and.(ifperiodic)) then  
             if (xbc(5).gt.0.0) then
               if (ie.le.nel_layer) then
                 period=nel_layer*(layer-1)
@@ -329,7 +337,7 @@ c           cbc(2,ie,2)='f  '
               bc(2,5,iee,1)=6.0
               bc(1,5,iee,2)=ie+period-el_rm
               bc(2,5,iee,2)=6.0
-c             bc(5,5,iee,1) = 2
+              bc(5,5,iee,1) = 0
             endif
             if (xbc(6).gt.0.0) then
               if (ie.le.(nel_layer*layer)) then
@@ -343,18 +351,18 @@ c             bc(5,5,iee,1) = 2
               bc(2,6,iee,1)=5.0
               bc(1,6,iee,2)=ie-period+el_rm
               bc(2,6,iee,2)=5.0
-c             bc(5,6,iee,1) = 3
+              bc(5,6,iee,1) = 0
             endif
           else
             if (xbc(5).gt.0.0) then
               cbc(5,iee,1)='v  '
               cbc(5,iee,2)='t  '
-              bc(5,5,iee,1) = 2
+              bc(5,5,iee,1) = 3
             endif
             if (xbc(6).gt.0.0) then 
               cbc(6,iee,1)='O  '
               cbc(6,iee,2)='I  '
-              bc(5,6,iee,1) = 3
+              bc(5,6,iee,1) = 4
             endif 
           endif  
         iee = iee+1
@@ -577,14 +585,10 @@ c     A two pass strategy is used:  first count, then write
 
       integer e,eb,eg,ii
  
-      write(*,*) 'here1'
-
       do e=1,num_elem
 c        write(*,*) 'element: ',e
         call gen_rea_midside_e(e)
       enddo
-
-      write(*,*) 'here2'
 
       nedge = 4 + 8*(num_dim-2)
       ncurvn = 0

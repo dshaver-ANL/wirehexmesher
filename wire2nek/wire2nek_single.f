@@ -169,7 +169,7 @@ c      cbc(2,ie,2)='f  '
          bc(2,5,iee,1)=6.0
          bc(1,5,iee,2)=ie+period-el_rm
          bc(2,5,iee,2)=6.0
-         bc(5,5,iee,1) = 3
+         bc(5,5,iee,1) = 0
          endif
          if (xbc(6).gt.0.0) then
             if (ie.le.(nel_layer*layer)) then
@@ -183,17 +183,17 @@ c      cbc(2,ie,2)='f  '
             bc(2,6,iee,1)=5.0
             bc(1,6,iee,2)=ie-period+el_rm
             bc(2,6,iee,2)=5.0
-            bc(5,6,iee,1) = 4
+            bc(5,6,iee,1) = 0
          endif
       else
         if (xbc(5).gt.0.0) then
-          cbc(5,iee,1)='W  '
-          cbc(5,iee,2)='W  '
+          cbc(5,iee,1)='v  '
+          cbc(5,iee,2)='t  '
           bc(5,5,iee,1) = 3
         endif
         if (xbc(6).gt.0.0) then 
-          cbc(6,iee,1)='W  '
-          cbc(6,iee,2)='W  '
+          cbc(6,iee,1)='O  '
+          cbc(6,iee,2)='I  '
           bc(5,6,iee,1) = 4
 
         endif 
