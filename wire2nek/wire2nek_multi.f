@@ -2,11 +2,10 @@ c-----------------------------------------------------------------------
       program wires
       include 'SIZE'
       integer nreps
-      real partial,spanlen
+      real partial
       logical ifperiodic
-      spanlen = 40.0 !length of a single span (mm)
       nreps   = 3    !number of full spans
-      partial = 0.5  !total length = (nreps+partial)*spanlen
+      partial = 0.5  !total length = (nreps+partial)*spanlength
       ifperiodic = .false.
       reaname_in="base.rea"
       reaname_out="wire_out.rea"
@@ -18,7 +17,7 @@ c Load elements and bc's
 c Load elements and bc's for pin
 c      call load_convert_pin
 c Generate a rea file with new geometry elements, curved sides and bc's
-      call replicate(nreps,partial,spanlen)
+      call replicate(nreps,partial)
       call test_range
       call gen_rea
       
@@ -31,11 +30,12 @@ c     Exit
 c      stop
       end 
 c-----------------------------------------------------------
-      subroutine replicate(nreps,partial,spanlen)
+      subroutine replicate(nreps,partial,ifperiodic)
       include 'SIZE'
       integer nreps,partial_elem,num_elem,blk_lay,elm_blk
       real partial
-      real spanlen
+      logical ifperiodic
+      real spanlen,z1_min,z1_max
 
       open(194,file='data_v5f.out',form='formatted',status='old')
       write(6,*) "*** Loading input data from mesher ***" 
@@ -45,7 +45,19 @@ c   12 format(5F)
 
 c     Parameters num_elem MUST be smaller than the parameter you are compiled with
 
+      z1_min= 1000000.0
+      z1_max=-1000000.0
 
+      do i=1,num_elem 
+      do j=1,27
+        if (z1_max.lt.zm1(j,1,1,i)) z1_max=zm1(j,1,1,i)
+        if (z1_min.gt.zm1(j,1,1,i)) z1_min=zm1(j,1,1,i)
+      enddo
+      enddo
+
+      spanlen=z1_max-z1_min
+  
+      write(6,*) "============================================="
       write(*,*) "length of 1 span = ",spanlen
       num_elem1=num_elem   
 
@@ -92,6 +104,8 @@ c     Parameters num_elem MUST be smaller than the parameter you are compiled wi
 c     THis section duplicates a fraction of a full pitch in addition
       if (partial.gt.0.0) then
         write(*,*) 'DOING PARTIAL'
+        if(ifperiodic) write(*,*) 
+     &     "WARNING: partial span + Periodic BCs, no guarantees..."
         k=nreps
         do i=1,nint(num_elem1*partial)
           do j=1,27
@@ -135,12 +149,29 @@ c      enddo
       write(*,*) "here", last_rep, last_layer, nel_layer, num_elem1
 
       do i=1,nel_layer
-        cbc(5,i,1)='v  '
-        cbc(5,i,2)='t  '
-        bc(5,5,i,1)=3
-        cbc(6,i+last_rep+last_layer,1)='O  '
-        cbc(6,i+last_rep+last_layer,2)='I  '
-        bc(5,6,i+last_rep+last_layer,1)=4
+        if(ifperiodic) then  !needs to be tested
+          cbc(5,i,1)='P  '
+          cbc(5,i,2)='P  '
+          bc(1,5,i,1)=i+last_rep+last_layer
+          bc(2,5,i,1)=6
+          bc(1,5,i,2)=i+last_rep+last_layer
+          bc(2,5,i,2)=6
+          bc(5,5,i,1)=0
+          cbc(6,i+last_rep+last_layer,1)='P  '
+          cbc(6,i+last_rep+last_layer,2)='P  '
+          bc(1,6,i+last_rep+last_layer,1)=i
+          bc(2,6,i+last_rep+last_layer,1)=5
+          bc(1,6,i+last_rep+last_layer,2)=i
+          bc(2,6,i+last_rep+last_layer,2)=5
+          bc(5,6,i+last_rep+last_layer,1)=0
+        else
+          cbc(5,i,1)='v  '
+          cbc(5,i,2)='t  '
+          bc(5,5,i,1)=3
+          cbc(6,i+last_rep+last_layer,1)='O  '
+          cbc(6,i+last_rep+last_layer,2)='I  '
+          bc(5,6,i+last_rep+last_layer,1)=4
+        endif
       enddo
  
       write(*,*) "num_elem", num_elem, "num_elem1", num_elem1,
