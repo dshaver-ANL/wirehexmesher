@@ -15,8 +15,8 @@ Col=12;                 % Number of columns per block (5 or 6 blocks surround ea
 Row=3;                  % Number of rows per block (2 blocks fit between neighboring pins)
 Rowdist=[65 30 5];      % distribution of elements in the row (for creating boundary layer)
 Lay=20;                 % Number of layers for 60 degree turn (this should be a reasonable number - above 10, tested typically for ~20)
-rperiodic=1.0;          % Less than zero if periodic, Greater than zero if inlet/outlet
 ipolar=0.25*(D/H)*360   % Starting polar orientation of wire (in degrees)
+rperiodic=1.0;          % Less than zero if periodic, Greater than zero if inlet/outlet (deprecated)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 PD =  P/D; 

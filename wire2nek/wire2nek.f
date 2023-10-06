@@ -4,9 +4,9 @@ c-----------------------------------------------------------------------
       integer nreps
       real partial
       logical ifperiodic
-      nreps   = 3    !number of full spans
-      partial = 0.5  !total length = (nreps+partial)*spanlength
-      ifperiodic = .false.
+      nreps   = 1    !number of full spans
+      partial = 0.0  !total length = (nreps+partial)*spanlength
+      ifperiodic = .true.
       reaname_in="base.rea"
       reaname_out="wire_out.rea"
 C Read .rea file to copy parameters
@@ -17,7 +17,7 @@ c Load elements and bc's
 c Load elements and bc's for pin
 c      call load_convert_pin
 c Generate a rea file with new geometry elements, curved sides and bc's
-      call replicate(nreps,partial)
+      call replicate(nreps,partial,ifperiodic)
       call test_range
       call gen_rea
       
@@ -105,7 +105,8 @@ c     THis section duplicates a fraction of a full pitch in addition
       if (partial.gt.0.0) then
         write(*,*) 'DOING PARTIAL'
         if(ifperiodic) write(*,*) 
-     &     "WARNING: partial span + Periodic BCs, no guarantees..."
+     &     "Partial span incompatible with periodic BCs"
+        ifperiodic=.false.
         k=nreps
         do i=1,nint(num_elem1*partial)
           do j=1,27
