@@ -1,23 +1,25 @@
 % Mesh parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-D    = 8.00;            %  pin diameter  (mm)
-P    = 9.04;            %  pin pitch
-Dw   = 1.03;            %  wire diameter (mm)
-Df   = 0.4;             %  fillet diameter (mm) (making this too small can cause bad elements)
-H    = 100.0;           %  wire pitch (mm)
-T    = 0.05*Dw          % trimmed off of wire (mm) (cuts off the tip of the wire)
-S    = 0.025*Dw;        % Wire submerged (mm) (how sunken in the wire is into the pin)
-Adjust = 1;             % if 1, Adjust flattness of wire when away from pins (if trimmed is on, only trim when wire passes pin)
-iFtF   = 0;             % if 1, add layer next to outer can
-G  = 0.0525;            % gap between wire and wall (mm)
-FtF_rescale = 1.0086;   % rescaling of outer FtF, the difference is given by an additional mesh layer - MUST BE BIGGER THAN 1
-ne=2;                   % Number of edge pins. e.g., ne=3 for 19 pin assembly. MINIMUM is 2
-Col=12;                 % Number of columns per block (5 or 6 blocks surround each pin)
-Row=3;                  % Number of rows per block (2 blocks fit between neighboring pins)
-Rowdist=[65 30 5];      % distribution of elements in the row (for creating boundary layer)
-Lay=20;                 % Number of layers for 60 degree turn (this should be a reasonable number - above 10, tested typically for ~20)
-ipolar=0.25*(D/H)*360   % Starting polar orientation of wire (in degrees)
-rperiodic=1.0;          % Less than zero if periodic, Greater than zero if inlet/outlet (deprecated)
+D  = 1.000000; %  pin diameter  (mm)
+P  = 1.156757; %  pin pitch
+Dw = 0.150338; %  wire diameter (mm)
+Df = 0.400*Dw; %  fillet diameter (mm) (making this too small can cause bad elements)
+H  = 13.40372; %  wire pitch (mm)
+G  = 0.006482; %  gap between wire and wall (mm)
+T  = 0.050*Dw; %  trimmed off of wire (mm) (cuts off the tip of the wire)
+S  = 0.025*Dw; %  Wire submerged (mm) (how sunken in the wire is into the pin)
+Adjust = 1; % if 1, Adjust flattness of wire when away from pins (if trimmed is on, only trim when wire passes pin)
+iFtF   = 0; % if 1, add layer next to outer can
+FtF_rescale = 1.01; % rescaling of outer FtF, the difference is given by an additional mesh layer - MUST BE BIGGER THAN 1
+ne=2;    % Number of edge pins. e.g., ne=3 for 19 pin assembly. MINIMUM is 2
+Col=15;   % Number of columns per block (5 or 6 blocks surround each pin)
+Row=3;   % Number of rows per block (2 blocks fit between neighboring pins)
+Rowdist=[53 32 15]; % distribution of elements in the row (for creating boundary layer)
+Lay=20;   % Number of layers for 60 degree turn (this should be a reasonable number - above 10, tested typically for ~20)
+ipolar = 0;  %Starting polar orientation of wire (degrees)
+rperiodic=-1.0; % Less than zero if periodic, Greater than zero if inlet/outlet
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%G = FtF/2 - (ne-1)*P*cos(pi/6) - D/2 - Dw % calculate gap from Flat-to-Flat
 
 PD =  P/D; 
 Dw = Dw/D; 

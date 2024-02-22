@@ -11,8 +11,10 @@ hold off;
 
 
 if T>0
+    fprintf('loading flattened wire mesh \n')
     load wire_quad_mesh_flat; x=xx; y=yy; t=tt; s=ssl; 
 else
+    fprintf('loading wire mesh \n')
     load wire_quad_mesh; x=xx; y=yy; t=tt; s=ssl; 
 end
 
@@ -43,7 +45,6 @@ for k=1:npin; txtstrg(X(k),Y(k),D,sprintf('%d',k));axis equal;hold on;end;
 
 [nvtx,nevtx,ntcl,tcell,necl,ecell,nccl,ccell,X,Y]=...
                        get_cells(ne,npin,km,xm,ym,X,Y,D,P,G);
-
 
 ncell=ntcl+necl+nccl;cell=zeros(4,ncell);cell_type=zeros(ncell,1);
 k0=1;k1=ntcl;k2=k1+necl;k3=k2+nccl;
@@ -120,7 +121,7 @@ j=ntcl;
 for k=1:necl;
   xc0=[Xcl(j+k),Ycl(j+k)];
   xcm=find_max_d(ecell(:,k),Xcl(j+k),Ycl(j+k),X,Y,R,P,w,npin,nevtx,xc0); 
-  Xsl(j+k)=xcm(1); Ysl(j+k)=xcm(2);plot(xcm(1),xcm(2),'ro');
+  Xsl(j+k)=xcm(1); Ysl(j+k)=xcm(2);plot(xcm(1),xcm(2),'rx');
 end;
 
 j=ntcl+necl; 
@@ -129,8 +130,9 @@ for k=1:nccl; cl = j+k;
 
   xcm=xy_proj(xc0,nn,cl,cl,X,Y,cell,cell_type,cell2p,npc,P,w,nevtx);
 % xcm=find_max_d(ccell(:,k),Xcl(j+k),Ycl(j+k),X,Y,R,P,w,npin,nevtx,xc0); 
-  Xsl(j+k)=xcm(1); Ysl(j+k)=xcm(2);plot(xcm(1),xcm(2),'ro');
-end;
+  Xsl(j+k)=xcm(1); Ysl(j+k)=xcm(2);plot(xcm(1),xcm(2),'r*');
+end
+%pause
   %pause(.01);
 
  
@@ -235,7 +237,7 @@ for e=1:nel;
       [xedge(:,nedge),yedge(:,nedge),dedge(:,nedge),gap]=...
             xy_edge(C1,C2,Xsl,Ysl,X,Y,cell,cell_type,cell2p,npc,P,w,m,nevtx,distC,pc,xedge,yedge,T,S);
 
-%        plot(xedge,yedge,'b*')
+%        plot(xedge,yedge,'g*')
 %        pause
  %{ 
         plot(Xsl(C1),Ysl(C1),'m*')
@@ -358,8 +360,6 @@ for e=1:nel; c1=ve(1,e);c4=ve(4,e);pin=qe(e);
     end;
   end;
   %plot(xedge(1:m,nedge),yedge(1:m,nedge),'bx'); 
-% plot(xedge,yedge,'b.');
-%  pause
 end;
 
 
@@ -571,13 +571,15 @@ for e=1:nel;
       plot(xyblock(:,1,ee,1),xyblock(:,1,ee,2),'b*')
       pause
       %}
+%plot(xyblock(:,:,ee,1),xyblock(:,:,ee,2),'b.')
+%pause
+
 
 
     %if mod(kgraph,4)==0; 
         spline_block(xyblock(:,:,ee,1),xyblock(:,:,ee,2)); 
     %end;
   elseif pin < 0; ee=ee+1; ee2e(ee) = e; e2ee(e) = ee;
-
 
     x12=Xsl(c12); X12=Xsl(C12); y12=Ysl(c12); Y12=Ysl(C12);
 %   plot(x12,y12,'go');plot(X12,Y12,'y*');
@@ -586,28 +588,126 @@ for e=1:nel;
 
     [amin,imin]=min(dedge(:,kedge));
 
-    if imin==1 || imin==medge; jj=0;   % If min pt is at start or end.
+    if 1==0%imin==1 || imin==medge; jj=0;   % If min pt is at start or end.
        
-       for i=1:medge; jj=jj+1; 
-         xtarg = x12+(i-1)*(X12-x12)/(medge-1);
-         ytarg = y12+(i-1)*(Y12-y12)/(medge-1);
-         xyblock(:,jj,ee,1)=xedge(i,kedge)+s.*(xtarg-xedge(i,kedge));
-         xyblock(:,jj,ee,2)=yedge(i,kedge)+s.*(ytarg-yedge(i,kedge));
-       end;
+%       for i=1:medge; jj=jj+1; 
+%         xtarg = x12+(i-1)*(X12-x12)/(medge-1);
+%         ytarg = y12+(i-1)*(Y12-y12)/(medge-1);
+%	 
+%         xyblock(:,jj,ee,1)=xedge(i,kedge)+s.*(xtarg-xedge(i,kedge));
+%         xyblock(:,jj,ee,2)=yedge(i,kedge)+s.*(ytarg-yedge(i,kedge));
+%       end;
     else  % Min pt is in middle of element
-      
        xt=zeros(medge);
        yt=xt;
 
        xt=X12*distC+x12*(1-distC);
        yt=Y12*distC+y12*(1-distC);
-       
-       
+
+  % make different xt yt for curved corners
+%       plot(X12,Y12,'b*')
+%       plot(x12,y12,'g*')
+%       plot(xt,yt,'k.')
+%       pause
+     if(pin>-7)
+
+       % Radius of corner curve
+       RR = 0.29223;
+       % distance between X12,Y12 and x12,y12
+       DD = ((X12-x12)^2+(Y12-y12)^2)^0.5;
+       % Angle of line between X12,Y12 and x12,y12
+       AA = atan2d(Y12-y12,X12-x12);
+       % Length of curved portion
+       DC = 1/12*pi*2*RR;
+       % Length of straight portion
+       DS = DD-RR*tand(30);
+       % Total distance
+       DT = DC+DS;
+       % 0,0 is start of straight, xc,yc is end point of curved portion
+       xc = DS+RR*sind(30);
+       yc = RR-RR*cosd(30);
+
+       % Create new geometric distribution across whole edge
+%
+       gap_count=size(distC,1)-1;
+       geom = 1.04;
+       dC2=zeros(gap_count+1,1);
+       dC2(2)=1;
+       for i=3:gap_count+1
+	  dC2(i)=dC2(i-1)*geom;
+       end 
+       for i=3:gap_count+1
+	  dC2(i)=dC2(i-1)+dC2(i);
+       end
+       dC2=dC2/max(dC2); 
+%}
+       % distribution from 0 to DD
+%       distCDD = DT*distC;
+       distCDD = DT*dC2;
+       xtt = zeros(size(distC,1),1);
+       ytt = xtt;
+       % Find distribution of points across curved part
+       distA = distCDD-DS;
+       distA = distA/max(distA)*30;
+
+       % MOdify distA so that wider elements at end of curve
+%{
+       distAm = distA(distA>0);
+       res_ang = distAm(end)-distAm(1);
+       gap_count=size(distAm,1)-1;
+       geom=1.05;
+       dA2=zeros(gap_count+1,1);
+       dA2(2)=1;
+       for i=3:gap_count+1
+	  dA2(i)=dA2(i-1)*geom;
+       end 
+       for i=3:gap_count+1
+	  dA2(i)=dA2(i-1)+dA2(i);
+       end
+       dA2 = dA2/max(dA2)*res_ang+distAm(1);
+       distA(distA>0)=dA2;
+%}
+
+       for i=1:size(distCDD)
+	% For not curved part, simply a straight line
+	if distCDD(i)<DS
+          xtt(i) = distCDD(i);
+	  ytt(i) = 0;
+        else
+        % For curved part, take rest of distribution and put over the 30 degree angle
+          xtt(i) = DS+RR*sind(distA(i));
+	  ytt(i) = RR-RR*cosd(distA(i));
+        end
+
+       end
+       % reverse y values if ee is even
+       if mod(ee,2) == 0
+	 xtt = flip(xtt);
+	 xtt = -xtt+DD;
+	 ytt = flip(ytt);
+       end	 
+        % Now that we have a distibution, rotate and translate it appropriately to fit on the corner. 
+       for i=1:size(distCDD)
+       xt(i) = xtt(i)*cosd(AA)-ytt(i)*sind(AA);
+       yt(i) = xtt(i)*sind(AA)+ytt(i)*cosd(AA);
+       xt(i)=xt(i)+x12;
+       yt(i)=yt(i)+y12; 
+ 
+       end
+%       plot(xtt,ytt,'g*')
+%       plot(xt,yt,'b*')
+%       plot(xc,yc,'k*')
+%       pause
+     end
+
        for i=1:medge; 
          xtarg = xt(i); ytarg = yt(i);
-         xyblock(:,i,ee,1)=xedge(i,kedge)+s.*(xtarg-xedge(i,kedge));
+	 xyblock(:,i,ee,1)=xedge(i,kedge)+s.*(xtarg-xedge(i,kedge));
          xyblock(:,i,ee,2)=yedge(i,kedge)+s.*(ytarg-yedge(i,kedge));
        end;
+
+%plot(xtarg,ytarg,'m.')
+%pause
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       %Check if this element has bad radial lines at a squeezed portion
@@ -616,9 +716,10 @@ for e=1:nel;
       out=squeeze(xyblock(end,:,ee,:));
 
 %      plot(in(:,1),in(:,2),'rx')
-%      plot(out(:,1),out(:,2),'bx')
+%      plot(out(:,1),out(:,2),'kx')
 %      pause      
-  
+
+%
       for iin=1:medge
          [mdist(iin),iout(iin)]=min(((in(iin,1)-out(:,1)).^2+(in(iin,2)-out(:,2)).^2).^(1/2));
     
@@ -632,85 +733,88 @@ for e=1:nel;
       xin=[in(miin,1),in(miin,2)];
       xout=[out(iout(miin),1),out(iout(miin),2)];
       
+      if miin ~=iout(miin) && false 
+%      if miin>2 && miin<medge-1 
+
+%      medge
+%      miin
+%      iout(miin)
+      low_dist = (iout(miin)-1)/(miin-1)
+      high_dist = (medge-iout(miin))/(medge-miin)
+      xt(1) = out(1,1);
+      yt(1) = out(1,2);
+      for i=2:miin-1
+	 % put point between two existing points
+	 % new point falls after
+	 p1i = floor((i-1)*low_dist)+1
+	 rem = (i-1)*low_dist-(p1i-1)
+	 xt(i) = out(p1i,1)+rem*(out(p1i+1,1)-out(p1i,1));
+	 yt(i) = out(p1i,2)+rem*(out(p1i+1,2)-out(p1i,2));
+      end
+      xt(miin)=out(iout(miin),1);
+      yt(miin)=out(iout(miin),2);
       
-      if miin>2 && miin<medge-1
+      for i=miin+1:medge-1
+	 p1i = floor((iout(miin)+(i-miin)*high_dist))
+	 rem = (iout(miin)+(i-miin)*high_dist)-p1i
+	 xt(i) = out(p1i,1)+rem*(out(p1i+1,1)-out(p1i,1));
+	 yt(i) = out(p1i,2)+rem*(out(p1i+1,2)-out(p1i,2));
+      end
       
-      
+      xt(medge) = out(medge,1)
+      yt(medge) = out(medge,2)
+
+%      plot(xt,yt,'k*')
+
+      for i=1:medge; 
+          xtarg = xt(i); ytarg = yt(i);
+          xyblock(:,i,ee,1)=xedge(i,kedge)+s.*(xtarg-xedge(i,kedge));
+          xyblock(:,i,ee,2)=yedge(i,kedge)+s.*(ytarg-yedge(i,kedge));
+      end;
+
+
+%{
       low=out(iout(miin)-1,:);
       high=out(iout(miin)+1,:);
       
       if iout(miin)==1; low=out(iout(miin),:); end
       if iout(miin)==medge; high=out(iout(miin),:); end
-      
+     
       if high(1)==low(1); high(1)=low(1)+1E-6; end
       if high(2)==low(2); high(2)=low(2)+1E-6; end
       
       
-      %{
-      xout(1)
-      xout(1)-(low(1):(high(1)-low(1))/100:high(1))
-      (xout(1)-(low(1):(high(1)-low(1))/100:high(1))).^2
-      xout(2)
-      low(2)
-      high(2)
-      (xout(2)-(low(2):(high(2)-low(2))/100:high(2))).^2
-      ( (xout(1)-(low(1):(high(1)-low(1))/100:high(1))).^2+(xout(2)-(low(2):(high(2)-low(2))/100:high(2))).^2 ).^(1/2)
-      %}
-      
-      
-      
       [mdr,index]=min( ( (xin(1)-(low(1):(high(1)-low(1))/100:high(1))).^2+(xin(2)-(low(2):(high(2)-low(2))/100:high(2))).^2 ).^(1/2) );
       
-      %pause
       
       xforeal=low+index/100*(high-low);
-      
+     
       xout=xforeal;
-      
-      
-          
-      %{
-      if iout(miin)>1
-          [mcw,icw]=min(((xin(1)-(1:-0.1:0)*xout(1)+(0:0.1:1)*out(iout(miin)-1,1)).^2+(xin(2)-(1:-0.1:0)*xout(2)+(0:0.1:1)*out(iout(miin)-1,2)).^2).^(1/2))
-          xmcw=icw/10*xout+(1-icw/10)*out(iout(miin)-1,:);
-  
-      %}
-      
-      %xout=[out(iout(miin),1),out(iout(miin),2)];
-      %plot(in(miin,1)+(0:0.1:1)*(out(iout(miin),1)-in(miin,1)),in(miin,2)+(0:0.1:1)*(out(iout(miin),2)-in(miin,2)),'m')
-      
-      %plot(xin(1),xin(2),'b*')
-      %plot(xout(1),xout(2),'r*')
-      
-      %
-      % if the length of line from in(miin) to out(miin) is 2X longer than
-      % md then do this:
-      %dist=((xin(1)-out(miin,1))+(xin(2)-out(miin,2)))^(1/2);
-      %if dist > 2*md
-         
-          xt(1:miin)=out(1,1)+(0:1/(miin-1):1)*(xout(1)-out(1,1));
-          yt(1:miin)=out(1,2)+(0:1/(miin-1):1)*(xout(2)-out(1,2));  
-          
-          xt(miin:medge)=xout(1)+(0:1/(medge-miin):1)*(out(medge,1)-xout(1));
-          yt(miin:medge)=xout(2)+(0:1/(medge-miin):1)*(out(medge,2)-xout(2));
 
+%      for i=1:medge
+
+
+%          xt(1:miin)=out(1,1)+(0:1/(miin-1):1)*(xout(1)-out(1,1));
+%          yt(1:miin)=out(1,2)+(0:1/(miin-1):1)*(xout(2)-out(1,2));  
+          
+%          xt(miin:medge)=xout(1)+(0:1/(medge-miin):1)*(out(medge,1)-xout(1));
+%          yt(miin:medge)=xout(2)+(0:1/(medge-miin):1)*(out(medge,2)-xout(2));
           
           for i=1:medge; 
              xtarg = xt(i); ytarg = yt(i);
              xyblock(:,i,ee,1)=xedge(i,kedge)+s.*(xtarg-xedge(i,kedge));
              xyblock(:,i,ee,2)=yedge(i,kedge)+s.*(ytarg-yedge(i,kedge));
           end;
-      %end
-          
-      %plot(xyblock(:,:,ee,1),xyblock(:,:,ee,2),'bx')
-      %plot(xout(1),xout(2),'r*')
-      %plot(high(1),high(2),'g*')
-      %plot(low(1),low(2),'k*')
-      %pause
-      end
+%      end
 %}
 
+     end
+%pause
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%plot(xyblock(:,:,ee,1),xyblock(:,:,ee,2),'b.')
+%pause
+s
 
     end;
 %   toc; 'PIN < 0'
@@ -723,6 +827,8 @@ for e=1:nel;
   end;
   if pin~=pinlast; drawnow; pause(.001); end; pinlast = pin;
 end;
+   
+%pause
 
 if kgraph==0;
   save data_ess_cell ...
@@ -1488,25 +1594,71 @@ function [x,dm]=...
 R     = wire(4);  % Pin radius
 % P2    = P/2    ;  % Pitch / 2
 
+% npc1 and 2 are the number of pins associated with each point (points at end of lines)
+% pc1 and 2 are a list of the pins associated with such points
 npc1 = npc(c1); pc1 = cell2p(c1,1:npc1);
 npc2 = npc(c2); pc2 = cell2p(c2,1:npc2);
 pcc  = intersect(pc1,pc2);   % Pins that are common to both cells
 npcc = length(pcc);
-
 
 h = .001;
 
 x0=X0; x1=x0+h*nn; 
 PP=[x0,x1]';
 
+% Accomodation for curved corners
+RC = 5.51/7.43; %Radius of curvature
 
+% Length of flat portion for distances
+FP = RC/20;
 
+%   plot(X(nevtx+1:nevtx+6),Y(nevtx+1:nevtx+6),'g*')
+%   pause
+%
+%
+%if(npcc==1) 
+%{
+for i=nevtx+1:nevtx+6
+  aa = atan2(Y(i),X(i));
+  LL = (X(i)*X(i)+Y(i)*Y(i))^(0.5);
+  LLp = LL-RC*(1/cosd(30)-1);
+  Xn(i)=LLp*cos(aa);
+  Yn(i)=LLp*sin(aa);
+%  Xn(ii+6)=LLp*cos(aa)-FP*sin(aa)
+%  Yn(ii+6)=LLp*sin(aa)+FP*cos(aa)
+%  Xn(ii+12)=LLp*cos(aa)+FP*sin(aa)
+%  Yn(ii+12)=LLp*sin(aa)-FP*cos(aa)
+end
+%}
+% Make a hexagon that cuts off the wire-wrap hexagon corners
+% Then use distance function from those lines to help keep points away from curved corner. 
+aa = atan2(Y(nevtx+1),X(nevtx+1));
+LL = (X(nevtx+1)*X(nevtx+1)+Y(nevtx+1)*Y(nevtx+1))^(0.5);
+XX = LL-RC*(1/cosd(30)-1);
+YY = XX*tand(30);
+for i=1:6
+  aa = (i-1)*60;
+  Xc(i) = XX*cosd(aa)-YY*sind(aa);
+  Yc(i) = XX*sind(aa)+YY*cosd(aa);
+end
+%plot(Xc,Yc,'g*')
+%pause
+%end
+%}
+%   plot(X(nevtx+1:nevtx+6),Y(nevtx+1:nevtx+6),'kx')
+%
+
+%plot(Xn,Yn,'g*')
 
 z1=1; iter=0;
 while abs(z1) > 100*eps && iter < 30; iter=iter+1;
    dei=fdedge(PP,X(nevtx+1:nevtx+6),Y(nevtx+1:nevtx+6));
-   
-   
+   dcc=fdedge(PP,Xc,Yc);
+   dei=min(dei,dcc);
+% Correction for curved corners (Check distance to corner)
+%   dcc = min(sqrt((PP(:,1)-Xn).^2+(PP(:,2)-Yn).^2)')';
+%   dei=min(dei,dcc);
+
    if npcc > 1; pcc1=pcc(2:npcc);
      %plot(PP(:,1),PP(:,2),'rx'); %pause
      %plot(X(pcc1),Y(pcc1),'m*');
@@ -1552,12 +1704,11 @@ x=x0;
 
 theta=atan((x(2)-Y(pcc1))/(x(1)-X(pcc1)));
 
+%plot(x(1),x(2),'go')
 %plot(x(1)-dpi*cos(theta),x(2)-dpi*sin(theta),'g*')
 
 %plot(x(1)-dw*cos(theta),x(2)-dw*sin(theta),'r*')
 %plot(x(1)-dei*cos(theta),x(2)-dei*sin(theta),'kx')
-%plot(x(1),x(2),'bx')
-%pause
 
 
 %
@@ -2092,6 +2243,9 @@ function ...
 [nel,nelp,nele,npts,ve,ce,be,pe,qe,te,Xcl,Ycl,neigh_e,neigh_s]=...
   gen_block(ncell,npin,ne,ncp,p2cell,X,Y,Xcl,Ycl,R,ntcl,necl,ecell,ccell,T) %35
 
+
+%plot(Xcl,Ycl,'b*')
+%pause
 
 % Input:
 %
