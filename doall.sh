@@ -1,7 +1,7 @@
 [ -e converter ] && rm converter
 
 cd matlab
-matlab -nodisplay -r wire_mesher
+matlab -nodisplay -r wire_mesher </dev/null
 mv *.out ../
 cd ..
 python bintoascii.py
