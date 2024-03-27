@@ -535,10 +535,11 @@ yy=yt;
 wire_quad_mesh = wire;
 if T>0
     save wire_quad_mesh_flat   xx yy tt ssl wire_quad_mesh PD Dw
+    display('Data saved to wire_quad_mesh_flat.mat')
 else
     save wire_quad_mesh   xx yy tt ssl wire_quad_mesh PD Dw
+    display('Data saved to wire_quad_mesh.mat')
 end
-display('Data saved to wire_quad_mesh.mat')
 
 % Display mesh
 

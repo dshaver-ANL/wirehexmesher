@@ -1,6 +1,10 @@
 [ -e converter ] && rm converter
 
+rm *.out 2>/dev/null #remove old files to eliminate false success
+rm wire_out 2>/dev/null
+
 cd matlab
+rm *.mat 2>/dev/null #remove old files to eliminate false success
 matlab -nodisplay -r wire_mesher </dev/null
 mv *.out ../
 cd ..
